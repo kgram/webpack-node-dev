@@ -16,19 +16,24 @@ const defaultConfig = {
 	// start/restart function.
 	// Default restarts on 'restart' and toggles debug on/off on
 	// 'debug'/'normal'
-	onInput: (input, lastOptions, startServer) => {
-		if (input === 'restart') {
-			startServer(lastOptions)
-		} else if (input === 'debug') {
-			startServer(Object.assign({}, lastOptions, { debug: true }))
-		} else if (input === 'normal') {
-			startServer(Object.assign({}, lastOptions, { debug: false }))
+	onInput: (input, options, startServer) => {
+		switch (input) {
+			case 'rs':
+			case 'restart':
+				startServer(options)
+				break
+			case 'debug':
+				startServer(Object.assign({}, options, { debug: true }))
+				break
+			case 'normal':
+				startServer(Object.assign({}, options, { debug: false }))
+				break
 		}
 	},
 	// Handle webpack compile
 	// Receives error/stats from webpack, server-options from last start  and
 	// the start/restart function
-	onCompile: (error, stats, lastOptions, startServer) => {
+	onCompile: (error, stats, options, startServer) => {
 		if (error) {
 			console.log(red('Webpack compilation error'), error)
 		} else if (stats.hasErrors()) {
@@ -43,12 +48,12 @@ const defaultConfig = {
 				chunks: false,
 				colors: true,
 			}))
-			startServer(lastOptions)
+			startServer(options)
 		}
 	},
 	// Default options passed to server start. Useful if using additional flags
 	// for env-variables
-	defaultOptions: { debug: false },
+	defaultStartupOptions: { debug: false },
 	// Get additional environment variables from server-options
 	getEnvironment: () => ({}),
 	// Entry script. Defaults to webpackConfig.output.filename
@@ -61,14 +66,14 @@ const defaultConfig = {
 	terminationDelay: 2000,
 }
 
-module.exports = (webpackConfig, serverConfig) => {
+module.exports = (webpackConfig, nodeDevConfig) => {
 	const {
 		onStart,
 		waitForOutput,
 		onClose,
 		onInput,
 		onCompile,
-		defaultOptions,
+		defaultStartupOptions,
 		getEnvironment,
 		entrypoint,
 		cwd,
@@ -76,28 +81,26 @@ module.exports = (webpackConfig, serverConfig) => {
 	} = Object.assign({}, defaultConfig, {
 		entrypoint: webpackConfig.output.filename,
 		cwd: webpackConfig.output.path,
-	}, serverConfig)
+	}, webpackConfig.nodeDev, nodeDevConfig)
 
 	let serverProcess = null
 	let killPromise = null
-	let serverOptions = defaultOptions
+	let startupOptions = defaultStartupOptions
 
 	webpack(webpackConfig)
-		.watch({
-
-		}, (error, stats) => {
-			onCompile(error, stats, serverOptions, startServer)
+		.watch({}, (error, stats) => {
+			onCompile(error, stats, startupOptions, startServer)
 		})
 
 	var stdin = process.openStdin()
 
 	stdin.addListener('data', (chunk) => {
 		const input = chunk.toString().trim()
-		onInput(input, serverOptions, startServer)
+		onInput(input, startupOptions, startServer)
 	})
 
 	const initServer = (options) => {
-		serverOptions = options
+		startupOptions = options
 		serverProcess = childProcess.spawn(
 			'node',
 			options.debug ? ['--inspect', entrypoint] : [entrypoint],
@@ -126,7 +129,6 @@ module.exports = (webpackConfig, serverConfig) => {
 		}
 
 		serverProcess.on('close', (code) => {
-			// Parent have not requested exit
 			if (killPromise) {
 				console.log(magenta('Server restarted..'))
 				onClose('kill')
@@ -179,14 +181,16 @@ module.exports = (webpackConfig, serverConfig) => {
 		return killPromise
 	}
 
-	// Ensure process is killed before exit
-	process.on('exit', () => {
+	const killOnExit = () => {
 		if (serverProcess) {
 			serverProcess.kill('SIGTERM')
 		}
-	})
-}
+	}
 
-// Ensure exit is called no matter the signal sent
-process.on('SIGINT', () => process.exit()) // catch ctrl-c
-process.on('SIGTERM', () => process.exit()) // catch kill
+	// Ensure process is killed before exit
+	process.on('exit', killOnExit)
+	// catch ctrl-c
+	process.on('SIGINT', killOnExit) 
+	// catch kill
+	process.on('SIGTERM', killOnExit) 
+}
