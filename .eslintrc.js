@@ -1,6 +1,4 @@
 module.exports = {
-roo: 'ru',
-
     parserOptions: {
         ecmaVersion: 6,
         sourceType: 'module',
@@ -9,6 +7,7 @@ roo: 'ru',
     extends: 'eslint:recommended',
     env: {
         node: true,
+        es6: true,
     },
     rules: {
         'indent': ['error', 4, { SwitchCase: 1 }],
@@ -20,6 +19,7 @@ roo: 'ru',
             imports: 'always-multiline',
             exports: 'always-multiline',
             functions: 'never',
-        }]
+        }],
+        'no-console': 'off',
     }
 }
