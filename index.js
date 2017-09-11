@@ -1,6 +1,6 @@
 const webpack = require('webpack')
 const childProcess = require('child_process')
-const { supportsColor, magenta, red } = require('chalk')
+const { supportsColor, yellow, red } = require('chalk')
 
 const defaultConfig = {
     // Called every time the server process is started
@@ -130,10 +130,10 @@ module.exports = (webpackConfig, nodeDevConfig) => {
 
         serverProcess.on('close', (code) => {
             if (killPromise) {
-                console.log(magenta('Server restarted..'))
+                console.log(yellow('Server restarted..'))
                 onClose('kill')
             } else if (code === 0) {
-                console.log(magenta('Server exited cleanly, restarts on new compilation'))
+                console.log(yellow('Server exited cleanly, restarts on new compilation'))
                 onClose('clean')
             } else {
                 console.log(red('Server crashed, restarts on new compilation'))

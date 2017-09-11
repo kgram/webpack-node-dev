@@ -3,7 +3,7 @@
 const path = require('path')
 
 const yargs = require('yargs')
-const { magenta, yellow } = require('chalk')
+const { yellow } = require('chalk')
 
 const nodeDev = require('./index')
 
@@ -24,9 +24,9 @@ try {
 }
 
 
-console.log(magenta('============================================'))
-console.log(magenta(`Starting development process`))
-console.log(magenta('============================================'))
+console.log(yellow('============================================'))
+console.log(yellow(`Starting development process`))
+console.log(yellow('============================================'))
 console.log(yellow('Enter commands: restart, debug, normal'))
 
 nodeDev(config)
