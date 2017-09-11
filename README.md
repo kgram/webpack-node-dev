@@ -1,8 +1,6 @@
 # webpack-node-dev
 
-Monitor you webpack-built node process during development. Like nodemon, but built directly for webpack. Pass your webpack config to node-dev, it will start webpack in watch-mode and restart your process whenever it recompiles.
-
-Somewhat like [nodemon](https://www.npmjs.com/package/nodemon), except hooked directly into webpack instead of watching for file-changes.
+Monitor your webpack-built node process during development. Somewhat like [nodemon](https://www.npmjs.com/package/nodemon), except hooked directly into webpack instead of watching for file changes.
 
 ## Installation
 
@@ -14,7 +12,7 @@ npm i -D webpack-node-dev
 
 `webpack-node-dev [--config <webpack-config-path>]`.
 
-* `--config` (`-c`): Specify path of webpack config file. Default is `webpack.config.js`.
+* `--config`, `-c`: The path to the webpack config file. Default is `webpack.config.js`.
 
 Configuration can be specified as `nodeDev` in the webpack config-file.
 
