@@ -18,11 +18,7 @@ The only flag possible is `-c`/`--config`. This is used to specify the webpack c
 
 ## Running programatically
 
-The only export is a function for starting webpack in watch-mode and running/monitoring the node process. It takes the webpack config object as argument.
-
-## Configuration
-
-Configuration is done by adding a `nodeDev` section to your webpack config file. Alternatively, settings can be passed as a second argument to the exported function, like so:
+The only export is a function for starting webpack in watch-mode and running/monitoring the node process. It takes the webpack config object as argument. A second argument can be added with settings to avoid poluting the webpack config.
 
 ```javascript
 const nodeDev = require('webpack-node-dev')
@@ -31,6 +27,10 @@ nodeDev(webpackConfig, {
     // Settings
 })
 ```
+
+## Configuration
+
+Configuration is done by adding a `nodeDev` section to your webpack config file or as a second argument to the exported function.
 
 The following properties can be used for configuration:
 
@@ -63,7 +63,7 @@ Default value: `() => {}`
 waitForOutput: boolean
 ```
 
-Delay calling `onStart` until output has been written to `stdout`. Useful for livereload-like scenarios. If the server doesn't output anything until it is fully initialized, reloading can be safely done.
+Delay calling `onStart` until output has been written to `stdout`. Useful for servers that have to run setup before being available.
 
 Default value: `false`
 
@@ -77,7 +77,7 @@ onClose: (
 ) => void
 ```
 
-Called whenever the server-process closes. It takes the last startupOptions and an enum-string indicating what caused the process closure. It also allows you to start the server again, possibly with different settings. This is inadvisible though, since the server will be started again as soon as webpack recompiles.
+Called whenever the server-process closes. It takes an enum-string indicating what caused the process closure and the last startupOptions. It also allows you to start the server again, possibly with different settings. This is inadvisible though, since the server will be started again as soon as webpack recompiles.
 
 Default value: `() => {}`
 
