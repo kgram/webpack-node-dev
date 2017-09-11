@@ -189,10 +189,12 @@ module.exports = (webpackConfig, nodeDevConfig) => {
     })
     // catch ctrl-c
     process.on('SIGINT', () => {
-        process.exit()
+        // Use same exit code as nodejs
+        process.exit(128 + 2)
     })
     // catch kill
     process.on('SIGTERM', () => {
-        process.exit()
+        // Use same exit code as nodejs
+        process.exit(128 + 15)
     }) 
 }
