@@ -1,14 +1,14 @@
 # webpack-node-dev
 
-Monitor you webpack-built node process during development. Like nodemon, but built directly for webpack. Pass your webpack config to node-dev, it will start webpack in watch-mode and restart your server whenever it recompiles.
+Monitor you webpack-built node process during development. Like nodemon, but built directly for webpack. Pass your webpack config to node-dev, it will start webpack in watch-mode and restart your process whenever it recompiles.
 
-## Unpublished
+Somewhat like [nodemon](https://www.npmjs.com/package/nodemon), except hooked directly into webpack instead of watching for file-changes.
 
-This project is currently not published. While the script works, the surrounding package is not done.
+## Installation
 
-<!-- ## Installation
-
-```npm i -D webpack-node-dev``` -->
+```sh
+npm i -D webpack-node-dev
+```
 
 ## Running from commandline
 
@@ -16,9 +16,11 @@ This project is currently not published. While the script works, the surrounding
 
 The only flag possible is `-c`/`--config`. This is used to specify the webpack config file used. Default is `webpack.config.js`.
 
+Configuration can be specified as `nodeDev` in the webpack config-file.
+
 ## Running programatically
 
-The only export is a function for starting webpack in watch-mode and running/monitoring the node process. It takes the webpack config object as argument. A second argument can be added with settings to avoid poluting the webpack config.
+The only export is a function for starting webpack in watch-mode and running/monitoring the node process. It takes the webpack config object as argument. Configuration can be specified as `nodeDev` in the webpack config-file or as a second argument to the function.
 
 ```typescript
 const nodeDev = require('webpack-node-dev')
