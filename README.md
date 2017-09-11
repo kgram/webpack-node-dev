@@ -20,7 +20,7 @@ The only flag possible is `-c`/`--config`. This is used to specify the webpack c
 
 The only export is a function for starting webpack in watch-mode and running/monitoring the node process. It takes the webpack config object as argument. A second argument can be added with settings to avoid poluting the webpack config.
 
-```javascript
+```typescript
 const nodeDev = require('webpack-node-dev')
 
 nodeDev(webpackConfig, {
@@ -30,22 +30,36 @@ nodeDev(webpackConfig, {
 
 ## Configuration
 
-Configuration is done by adding a `nodeDev` section to your webpack config file or as a second argument to the exported function.
+### Common concepts
 
-The following properties can be used for configuration:
+```typescript
+StartupOptions: {
+    debug: boolean,
+    [key:string]: any,
+}
+```
+
+Current settings for running the node process. The core script only recognizes the `debug` property, but other properties can be added freely and are passed to the `onStart`, `getEnvironment`, `onInput`, `onClose`, `onCompile`. 
+
+`debug` toggles the node `--inspect` flag for the process.
 
 ---
 
 ```typescript
-defaultStartupOptions: {
-    debug: boolean,
-    [key:string]: any
-}
+StartProcess: (options?: Partial<StartupOptions>) => void
 ```
 
-The options for running the server initially. Adding custom properties can for instance be used to control environment variables. The only property recognized by the default settings is `debug`, toggling the `--inspect` flag for the node process.
+Supplied as argument to relevant events. Terminates the running node instance if one exists, then starts the process again.
 
-The current `startupOptions` can be modified from `onInput`, `onCompile` or `onClose`.
+StartupOptions can be changed by passing an object as argument.
+
+### Properties
+
+```typescript
+defaultStartupOptions: StartupOptions
+```
+
+The StartupOptions used to first start the node process.
 
 Default value: 
 ```typescript
@@ -56,12 +70,12 @@ Default value:
 
 ```typescript
 onStart: (
-    startServer: (options: Partial<StartupOptions>) => void
+    startProcess: StartProcess,
     options: StartupOptions,
 ) => void
 ```
 
-Called whenever the server has been started. Useful for livereload-like scenarios. Can trigger a restart for API consistency, although it would probably be best not to.
+Called whenever the process has been started. Useful for livereload-like scenarios. Can trigger a restart for API consistency, although it would probably be best not to, since it may cause a restart-loop.
 
 Default value: 
 ```typescript
@@ -86,12 +100,18 @@ false
 ```typescript
 onClose: (
     reason: 'kill' | 'clean' | 'crash',
-    startServer: (options: Partial<StartupOptions>) => void
+    startProcess: StartProcess,
     options: StartupOptions, 
 ) => void
 ```
 
-Called whenever the server-process closes. It takes an enum-string indicating what caused the process closure and the last startupOptions. It also allows you to start the server again, possibly with different settings. The server will also restart on a new webpack compile, so this is unlikely to be necessary.
+Called whenever the node process closes. It takes an enum-string indicating what caused the process closure:
+
+* `'kill'`: A call to `StartProcess`
+* `'clean'`: Process exited with code 0
+* `'crash'`: Process exited with non-zero code
+
+Info about the closure is logged no matter what. It allows restarting the process, but this should generally be left to `onCompile` to avoid restart-loops.
 
 Default value: 
 ```typescript
@@ -103,26 +123,26 @@ Default value:
 ```typescript
 onInput: (
     input: string,
-    startServer: (options: Partial<StartupOptions>) => void
+    startProcess: StartProcess,
     options: StartupOptions,
 ) => void
 ```
 
-Called whenever input is written to the terminal. Using the `startServer` function, the server can be started with modified `startupOptions` (with existing processes closed). The default implementation recognizes `rs` and `restart` for restarts with same options and `debug`/`normal` to switch the `--inspect` flag on/off. You can basically put any convinient code in here though, such as generating tokens for a given id.
+Called whenever input is written to the terminal with the trimmed input-string. The default implementation recognizes `rs` and `restart` for restarts with same options and `debug`/`normal` to toggle the `--inspect` flag. You can basically put any convinient code in here though, such as generating tokens for a given id.
 
 Default value:
 ```typescript
-(input, startServer) => {
+(input, startProcess) => {
     switch (input) {
         case 'rs':
         case 'restart':
-            startServer()
+            startProcess()
             break
         case 'debug':
-            startServer({ debug: true })
+            startProcess({ debug: true })
             break
         case 'normal':
-            startServer({ debug: false })
+            startProcess({ debug: false })
             break
     }
 }
@@ -134,24 +154,24 @@ Default value:
 onCompile: (
     error: WebpackWatchError,
     stats: WebpackStats, 
-    startServer: (options: Partial<StartupOptions>) => void
+    startProcess: StartProcess,
     options: StartupOptions,
 ) => void
 ```
 
-Called whenever webpack compiles. The default implementation logs the result of the compilation and restarts the server if there were no errors.
+Called whenever webpack compiles. The default implementation logs the result of the compilation and restarts the node process if there were no errors.
 
 Default value:
 ```typescript
-(error, stats, startServer) => {
+(error, stats, startProcess) => {
     if (error) {
         console.log(red('Webpack compilation error'), error)
     } else if (stats.hasErrors()) {
         console.log(stats.toString({ chunks: false, colors: true }))
     } else {
         console.log(stats.toString({ chunks: false, colors: true }))
-        // Restart server
-        startServer()
+        
+        startProcess()
     }
 }
 ```
@@ -159,10 +179,12 @@ Default value:
 ---
 
 ```typescript
-getEnvironment: (options: StartupOptions) => { [key: string]: string }
+getEnvironment: (
+    options: StartupOptions
+) => { [key: string]: string }
 ```
 
-Enhance the environment variables of the node process. Besides anything returned here, `process.env` is included, as well as `FORCE_COLOR` for [chalk](https://www.npmjs.com/package/chalk) if color is supported. These can be overwritten.
+Enhance the environment variables of the node process. Besides anything returned here, `process.env` is included, as well as `FORCE_COLOR` for [chalk](https://www.npmjs.com/package/chalk) if color is supported. These can be overwritten by what is returned.
 
 Default value: 
 ```typescript
