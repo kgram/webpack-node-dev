@@ -50,10 +50,13 @@ Default value: `{ debug: false }`
 ---
 
 ```typescript
-onStart: (options: StartupOptions) => void
+onStart: (
+    startServer: (options: Partial<StartupOptions>) => void
+    options: StartupOptions,
+) => void
 ```
 
-Called whenever the server has been started. Useful for livereload-like scenarios.
+Called whenever the server has been started. Useful for livereload-like scenarios. Can trigger a restart for API consistency, although it would probably be best not to.
 
 Default value: `() => {}`
 
@@ -72,12 +75,12 @@ Default value: `false`
 ```typescript
 onClose: (
     reason: 'kill' | 'clean' | 'crash',
+    startServer: (options: Partial<StartupOptions>) => void
     options: StartupOptions, 
-    startServer: (options: StartupOptions) => void
 ) => void
 ```
 
-Called whenever the server-process closes. It takes an enum-string indicating what caused the process closure and the last startupOptions. It also allows you to start the server again, possibly with different settings. This is inadvisible though, since the server will be started again as soon as webpack recompiles.
+Called whenever the server-process closes. It takes an enum-string indicating what caused the process closure and the last startupOptions. It also allows you to start the server again, possibly with different settings. The server will also restart on a new webpack compile, so this is unlikely to be necessary.
 
 Default value: `() => {}`
 
@@ -86,8 +89,8 @@ Default value: `() => {}`
 ```typescript
 onInput: (
     input: string,
+    startServer: (options: Partial<StartupOptions>) => void
     options: StartupOptions,
-    startServer: (options: StartupOptions) => void
 ) => void
 ```
 
@@ -101,8 +104,8 @@ Default value: Longer function
 onCompile: (
     error: WebpackWatchError,
     stats: WebpackStats, 
+    startServer: (options: Partial<StartupOptions>) => void
     options: StartupOptions,
-    startServer: (options: StartupOptions) => void
 ) => void
 ```
 

@@ -16,24 +16,24 @@ const defaultConfig = {
     // start/restart function.
     // Default restarts on 'restart' and toggles debug on/off on
     // 'debug'/'normal'
-    onInput: (input, options, startServer) => {
+    onInput: (input, startServer) => {
         switch (input) {
             case 'rs':
             case 'restart':
-                startServer(options)
+                startServer()
                 break
             case 'debug':
-                startServer(Object.assign({}, options, { debug: true }))
+                startServer({ debug: true })
                 break
             case 'normal':
-                startServer(Object.assign({}, options, { debug: false }))
+                startServer({ debug: false })
                 break
         }
     },
     // Handle webpack compile
     // Receives error/stats from webpack, server-options from last start  and
     // the start/restart function
-    onCompile: (error, stats, options, startServer) => {
+    onCompile: (error, stats, startServer) => {
         if (error) {
             console.log(red('Webpack compilation error'), error)
         } else if (stats.hasErrors()) {
@@ -48,7 +48,8 @@ const defaultConfig = {
                 chunks: false,
                 colors: true,
             }))
-            startServer(options)
+            // Restart server
+            startServer()
         }
     },
     // Default options passed to server start. Useful if using additional flags
@@ -89,21 +90,21 @@ module.exports = (webpackConfig, nodeDevConfig) => {
 
     webpack(webpackConfig)
         .watch({}, (error, stats) => {
-            onCompile(error, stats, startupOptions, startServer)
+            onCompile(error, stats, startServer, startupOptions)
         })
 
     var stdin = process.openStdin()
 
     stdin.addListener('data', (chunk) => {
         const input = chunk.toString().trim()
-        onInput(input, startupOptions, startServer)
+        onInput(input, startServer, startupOptions)
     })
 
     const initServer = (options) => {
-        startupOptions = options
+        startupOptions = Object.assign({}, startupOptions, options)
         serverProcess = childProcess.spawn(
             'node',
-            options.debug ? ['--inspect', entrypoint] : [entrypoint],
+            startupOptions.debug ? ['--inspect', entrypoint] : [entrypoint],
             {
                 cwd,
                 // Clone environment
@@ -111,7 +112,7 @@ module.exports = (webpackConfig, nodeDevConfig) => {
                     // Force chalk to register the child process with the same color properties
                     // Any value passed enables force-color
                     FORCE_COLOR: supportsColor ? 'true' : undefined,
-                }, getEnvironment(options)),
+                }, getEnvironment(startupOptions)),
                 // Do not inherit stdout, this is used to check when server is ready
                 stdio: [process.stdin, 'pipe', process.stderr],
             }
@@ -119,25 +120,25 @@ module.exports = (webpackConfig, nodeDevConfig) => {
         let hasOutput = false
         serverProcess.stdout.addListener('data', (chunk) => {
             if (waitForOutput && !hasOutput) {
-                onStart(options)
+                onStart(startServer, startupOptions)
                 hasOutput = true
             }
             process.stdout.write(chunk)
         })
         if (!waitForOutput) {
-            onStart(options)
+            onStart(startServer, startupOptions)
         }
 
         serverProcess.on('close', (code) => {
             if (killPromise) {
                 console.log(yellow('Server restarted..'))
-                onClose('kill')
+                onClose('kill', startServer, startupOptions)
             } else if (code === 0) {
                 console.log(yellow('Server exited cleanly, restarts on new compilation'))
-                onClose('clean')
+                onClose('clean', startServer, startupOptions)
             } else {
                 console.log(red('Server crashed, restarts on new compilation'))
-                onClose('crash')
+                onClose('crash', startServer, startupOptions)
             }
 
             serverProcess = null
@@ -147,7 +148,7 @@ module.exports = (webpackConfig, nodeDevConfig) => {
 
     const startServer = (options) => {
         if (!serverProcess && !killPromise) {
-            initServer(options)
+            process.nextTick(() => initServer(options))
         } else if (!killPromise) {
             killServer().then(() => initServer(options))
         }
