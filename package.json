@@ -3,6 +3,7 @@
   "version": "0.0.1",
   "description": "Run a node-process built by webpack with automatic restart",
   "main": "index.js",
+  "bin": "./cli.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
