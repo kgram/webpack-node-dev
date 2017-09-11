@@ -37,17 +37,9 @@ const defaultConfig = {
         if (error) {
             console.log(red('Webpack compilation error'), error)
         } else if (stats.hasErrors()) {
-            console.log(red('Node compilation error'))
-            console.log(stats.toString({
-                chunks: false,
-                colors: true,
-            }))
+            console.log(stats.toString({ chunks: false, colors: true }))
         } else {
-            console.log(magenta('Node compiled'))
-            console.log(stats.toString({
-                chunks: false,
-                colors: true,
-            }))
+            console.log(stats.toString({ chunks: false, colors: true }))
             // Restart server
             startServer()
         }
