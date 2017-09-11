@@ -12,9 +12,9 @@ npm i -D webpack-node-dev
 
 ## Running from commandline
 
-`webpack-node-dev [-c/--config <webpack-config-path>]`.
+`webpack-node-dev [--config <webpack-config-path>]`.
 
-The only flag possible is `-c`/`--config`. This is used to specify the webpack config file used. Default is `webpack.config.js`.
+* `--config` (`-c`): Specify path of webpack config file. Default is `webpack.config.js`.
 
 Configuration can be specified as `nodeDev` in the webpack config-file.
 
@@ -172,7 +172,7 @@ Default value:
         console.log(stats.toString({ chunks: false, colors: true }))
     } else {
         console.log(stats.toString({ chunks: false, colors: true }))
-        
+
         startProcess()
     }
 }

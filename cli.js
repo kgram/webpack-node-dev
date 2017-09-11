@@ -11,6 +11,7 @@ const args = yargs
     .option('config', {
         alias: 'c',
         default: 'webpack.config.js',
+        description: 'The path to the webpack config file',
     })
     .help()
     .argv

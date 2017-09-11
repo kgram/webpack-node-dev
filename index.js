@@ -40,7 +40,7 @@ const defaultConfig = {
             console.log(stats.toString({ chunks: false, colors: true }))
         } else {
             console.log(stats.toString({ chunks: false, colors: true }))
-            
+
             startProcess()
         }
     },
