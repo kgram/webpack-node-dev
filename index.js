@@ -181,16 +181,18 @@ module.exports = (webpackConfig, nodeDevConfig) => {
         return killPromise
     }
 
-    const killOnExit = () => {
+    // Ensure process is killed before exit
+    process.on('exit', () => {
         if (serverProcess) {
             serverProcess.kill('SIGTERM')
         }
-    }
-
-    // Ensure process is killed before exit
-    process.on('exit', killOnExit)
+    })
     // catch ctrl-c
-    process.on('SIGINT', killOnExit) 
+    process.on('SIGINT', () => {
+        process.exit()
+    })
     // catch kill
-    process.on('SIGTERM', killOnExit) 
+    process.on('SIGTERM', () => {
+        process.exit()
+    }) 
 }
