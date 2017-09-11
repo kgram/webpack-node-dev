@@ -1,6 +1,6 @@
 {
   "name": "webpack-node-dev",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Run a node-process built by webpack with automatic restart",
   "main": "index.js",
   "bin": "./cli.js",
