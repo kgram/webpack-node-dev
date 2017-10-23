@@ -3,19 +3,13 @@ const childProcess = require('child_process')
 const { supportsColor, yellow, red } = require('chalk')
 
 const defaultConfig = {
-    // Called every time the server process is started
+    // Called whenever the process has been started
     onStart: () => {},
-    // Defer the onStart event until the first write to stdout
-    // This is useful for server first outputting when the server is ready
+    // Delay calling `onStart` until output has been written to `stdout`
     waitForOutput: false,
-    // Called every time the server closes. Takes one argument, 'kill', 'clean'
-    // or 'crash' depending on the circumstances
+    // Called whenever the node process closes
     onClose: () => {},
-    // Handle input
-    // Receives a trimmed input string, server-options from last start and the
-    // start/restart function.
-    // Default restarts on 'restart' and toggles debug on/off on
-    // 'debug'/'normal'
+    // Called whenever input is written to the terminal with the trimmed input-string
     onInput: (input, startProcess) => {
         switch (input) {
             case 'rs':
@@ -30,9 +24,7 @@ const defaultConfig = {
                 break
         }
     },
-    // Handle webpack compile
-    // Receives error/stats from webpack, server-options from last start  and
-    // the start/restart function
+    // Called whenever webpack compiles
     onCompile: (error, stats, startProcess) => {
         if (error) {
             console.log(red('Webpack compilation error'), error)
@@ -44,18 +36,15 @@ const defaultConfig = {
             startProcess()
         }
     },
-    // Default options passed to server start. Useful if using additional flags
-    // for env-variables
+    // Default options passed to process start
     defaultStartupOptions: { debug: false },
-    // Get additional environment variables from server-options
+    // Enhance the environment variables of the node process
     getEnvironment: () => ({}),
-    // Entry script. Defaults to webpackConfig.output.filename
+    // Entrypoint, if null it will be webpackConfig.output.filename
     entrypoint: null,
-    // Current working directory. Defaults to webpackConfig.output.path
+    // Current working directory, if null it will be webpackConfig.output.path
     cwd: null,
-    // How long to wait after SIGINT until sending SIGTERM to the server process
-    // Set to 0 to send SIGTERM immediately instead of SIGINT
-    // Set to null to disable
+    // Wait between SIGINT and SIGTERM
     terminationDelay: 2000,
 }
 
