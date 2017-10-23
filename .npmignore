@@ -1,3 +1,5 @@
 .npmignore
 .eslintrc.js
 .gitignore
+test-cases
+dist
