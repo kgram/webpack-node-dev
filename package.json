@@ -28,7 +28,6 @@
   "homepage": "https://github.com/kgram/webpack-node-dev#readme",
   "dependencies": {
     "chalk": "^2.1.0",
-    "minimist": "^1.2.0",
     "yargs": "^8.0.2"
   },
   "devDependencies": {
