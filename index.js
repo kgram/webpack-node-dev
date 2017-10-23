@@ -8,7 +8,19 @@ const defaultConfig = {
     // Delay calling `onStart` until output has been written to `stdout`
     waitForOutput: false,
     // Called whenever the node process closes
-    onClose: () => {},
+    onClose: (reason) => {
+        switch (reason) {
+            case 'kill':
+                console.log(yellow('Process restarted..'))
+                break
+            case 'clean':
+                console.log(yellow('Process exited cleanly, restarts on new compilation'))
+                break
+            case 'crash':
+                console.log(red('Process crashed, restarts on new compilation'))
+                break
+        }
+    },
     // Called whenever input is written to the terminal with the trimmed input-string
     onInput: (input, startProcess) => {
         switch (input) {
@@ -112,13 +124,10 @@ module.exports = (webpackConfig, nodeDevConfig) => {
 
         nodeProcess.on('close', (code) => {
             if (killPromise) {
-                console.log(yellow('Process restarted..'))
                 onClose('kill', startProcess, startupOptions)
             } else if (code === 0) {
-                console.log(yellow('Process exited cleanly, restarts on new compilation'))
                 onClose('clean', startProcess, startupOptions)
             } else {
-                console.log(red('Process crashed, restarts on new compilation'))
                 onClose('crash', startProcess, startupOptions)
             }
 

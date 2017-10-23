@@ -115,7 +115,19 @@ Info about the closure is logged no matter what. It allows restarting the proces
 
 Default value: 
 ```typescript
-() => {}
+(reason) => {
+    switch (reason) {
+        case 'kill':
+            console.log(yellow('Process restarted..'))
+            break
+        case 'clean':
+            console.log(yellow('Process exited cleanly, restarts on new compilation'))
+            break
+        case 'crash':
+            console.log(red('Process crashed, restarts on new compilation'))
+            break
+    }
+}
 ```
 
 ---
