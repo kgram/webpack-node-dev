@@ -65,7 +65,7 @@ module.exports = (webpackConfig, nodeDevConfig) => {
         cwd: webpackConfig.output.path,
     }, webpackConfig.nodeDev, nodeDevConfig)
 
-    let serverProcess = null
+    let nodeProcess = null
     let killPromise = null
     let startupOptions = defaultStartupOptions
 
@@ -81,9 +81,9 @@ module.exports = (webpackConfig, nodeDevConfig) => {
         onInput(input, startProcess, startupOptions)
     })
 
-    const initServer = (options) => {
+    const initProcess = (options) => {
         startupOptions = Object.assign({}, startupOptions, options)
-        serverProcess = childProcess.spawn(
+        nodeProcess = childProcess.spawn(
             'node',
             startupOptions.debug ? ['--inspect', entrypoint] : [entrypoint],
             {
@@ -94,12 +94,12 @@ module.exports = (webpackConfig, nodeDevConfig) => {
                     // Any value passed enables force-color
                     FORCE_COLOR: supportsColor ? 'true' : undefined,
                 }, getEnvironment(startupOptions)),
-                // Do not inherit stdout, this is used to check when server is ready
+                // Do not inherit stdout, manually piped piped below
                 stdio: [process.stdin, 'pipe', process.stderr],
             }
         )
         let hasOutput = false
-        serverProcess.stdout.addListener('data', (chunk) => {
+        nodeProcess.stdout.addListener('data', (chunk) => {
             if (waitForOutput && !hasOutput) {
                 onStart(startProcess, startupOptions)
                 hasOutput = true
@@ -110,34 +110,34 @@ module.exports = (webpackConfig, nodeDevConfig) => {
             onStart(startProcess, startupOptions)
         }
 
-        serverProcess.on('close', (code) => {
+        nodeProcess.on('close', (code) => {
             if (killPromise) {
-                console.log(yellow('Server restarted..'))
+                console.log(yellow('Process restarted..'))
                 onClose('kill', startProcess, startupOptions)
             } else if (code === 0) {
-                console.log(yellow('Server exited cleanly, restarts on new compilation'))
+                console.log(yellow('Process exited cleanly, restarts on new compilation'))
                 onClose('clean', startProcess, startupOptions)
             } else {
-                console.log(red('Server crashed, restarts on new compilation'))
+                console.log(red('Process crashed, restarts on new compilation'))
                 onClose('crash', startProcess, startupOptions)
             }
 
-            serverProcess = null
+            nodeProcess = null
             killPromise = null
         })
     }
 
     const startProcess = (options) => {
-        if (!serverProcess && !killPromise) {
-            process.nextTick(() => initServer(options))
+        if (!nodeProcess && !killPromise) {
+            process.nextTick(() => initProcess(options))
         } else if (!killPromise) {
-            killServer().then(() => initServer(options))
+            killProcess().then(() => initProcess(options))
         }
     }
 
-    const killServer = () => {
-        if (!serverProcess) {
-            throw new Error('Server process not running, cannot kill')
+    const killProcess = () => {
+        if (!nodeProcess) {
+            throw new Error('Node process not running, cannot kill')
         }
         if (killPromise) {
             return killPromise
@@ -148,16 +148,16 @@ module.exports = (webpackConfig, nodeDevConfig) => {
                 // Send SIGTERM after timeout
                 killTimeout = setTimeout(() => {
                     killTimeout = null
-                    serverProcess.kill('SIGTERM')
+                    nodeProcess.kill('SIGTERM')
                 }, 2000)
             }
-            serverProcess.on('close', () => {
+            nodeProcess.on('close', () => {
                 if (killTimeout) {
                     clearTimeout(killTimeout)
                 }
                 resolve()
             })
-            serverProcess.kill(terminationDelay === 0 ? 'SIGTERM' : 'SIGINT')
+            nodeProcess.kill(terminationDelay === 0 ? 'SIGTERM' : 'SIGINT')
         })
 
         return killPromise
@@ -165,8 +165,8 @@ module.exports = (webpackConfig, nodeDevConfig) => {
 
     // Ensure process is killed before exit
     process.on('exit', () => {
-        if (serverProcess) {
-            serverProcess.kill('SIGTERM')
+        if (nodeProcess) {
+            nodeProcess.kill('SIGTERM')
         }
     })
     // catch ctrl-c
