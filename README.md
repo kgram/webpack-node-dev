@@ -223,9 +223,9 @@ null
 terminationDelay: number | null
 ```
 
-How long to wait (ms) after sending SIGINT until sending SIGTERM to the node process.
+How long to wait (ms) after sending SIGINT until sending SIGKILL to the node process.
 
-Set to 0 to send SIGTERM immediately instead of SIGINT.
+Set to 0 to send SIGKILL immediately instead of SIGINT.
 
 Set to null to disable.
 

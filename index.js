@@ -44,7 +44,7 @@ const defaultConfig = {
     entrypoint: null,
     // Current working directory, if null it will be webpackConfig.output.path
     cwd: null,
-    // Wait between SIGINT and SIGTERM
+    // Wait between SIGINT and SIGKILL
     terminationDelay: 2000,
 }
 
@@ -145,10 +145,10 @@ module.exports = (webpackConfig, nodeDevConfig) => {
         killPromise = new Promise((resolve) => {
             let killTimeout = null
             if (terminationDelay) {
-                // Send SIGTERM after timeout
+                // Send SIGKILL after timeout
                 killTimeout = setTimeout(() => {
                     killTimeout = null
-                    nodeProcess.kill('SIGTERM')
+                    nodeProcess.kill('SIGKILL')
                 }, 2000)
             }
             nodeProcess.on('close', () => {
@@ -157,7 +157,7 @@ module.exports = (webpackConfig, nodeDevConfig) => {
                 }
                 resolve()
             })
-            nodeProcess.kill(terminationDelay === 0 ? 'SIGTERM' : 'SIGINT')
+            nodeProcess.kill(terminationDelay === 0 ? 'SIGKILL' : 'SIGINT')
         })
 
         return killPromise
@@ -166,7 +166,7 @@ module.exports = (webpackConfig, nodeDevConfig) => {
     // Ensure process is killed before exit
     process.on('exit', () => {
         if (nodeProcess) {
-            nodeProcess.kill('SIGTERM')
+            nodeProcess.kill('SIGKILL')
         }
     })
     // catch ctrl-c
@@ -178,5 +178,5 @@ module.exports = (webpackConfig, nodeDevConfig) => {
     process.on('SIGTERM', () => {
         // Use same exit code as nodejs
         process.exit(128 + 15)
-    }) 
+    })
 }
