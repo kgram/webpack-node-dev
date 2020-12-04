@@ -52,6 +52,8 @@ const defaultConfig = {
     defaultStartupOptions: { debug: false },
     // Enhance the environment variables of the node process
     getEnvironment: () => ({}),
+    // Get additional CLI arguments for the node process
+    getArguments: () => [],
     // Entrypoint, if null it will be webpackConfig.output.filename
     entrypoint: null,
     // Current working directory, if null it will be webpackConfig.output.path
@@ -69,6 +71,7 @@ module.exports = (webpackConfig, nodeDevConfig) => {
         onCompile,
         defaultStartupOptions,
         getEnvironment,
+        getArguments,
         entrypoint,
         cwd,
         terminationDelay,
@@ -97,7 +100,9 @@ module.exports = (webpackConfig, nodeDevConfig) => {
         startupOptions = Object.assign({}, startupOptions, options)
         nodeProcess = childProcess.spawn(
             'node',
-            startupOptions.debug ? ['--inspect', entrypoint] : [entrypoint],
+            startupOptions.debug
+                ? ['--inspect', entrypoint, ...getArguments(startupOptions)]
+                : [entrypoint, ...getArguments(startupOptions)],
             {
                 cwd,
                 // Clone environment

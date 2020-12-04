@@ -39,7 +39,7 @@ StartupOptions: {
 }
 ```
 
-Current settings for running the node process. The core script only recognizes the `debug` property, but other properties can be added freely and are passed to the `onStart`, `getEnvironment`, `onInput`, `onClose`, `onCompile`. 
+Current settings for running the node process. The core script only recognizes the `debug` property, but other properties can be added freely and are passed to the `onStart`, `getEnvironment`, `getArguments`, `onInput`, `onClose`, `onCompile`.
 
 `debug` toggles the node `--inspect` flag for the process.
 
@@ -61,7 +61,7 @@ defaultStartupOptions: StartupOptions
 
 The StartupOptions used to first start the node process.
 
-Default value: 
+Default value:
 ```typescript
 { debug: false }
 ```
@@ -77,7 +77,7 @@ onStart: (
 
 Called whenever the process has been started. Useful for livereload-like scenarios. Can trigger a restart for API consistency, although it would probably be best not to, since it may cause a restart-loop.
 
-Default value: 
+Default value:
 ```typescript
 () => {}
 ```
@@ -90,7 +90,7 @@ waitForOutput: boolean
 
 Delay calling `onStart` until output has been written to `stdout`. Useful for servers that have to run setup before being available.
 
-Default value: 
+Default value:
 ```typescript
 false
 ```
@@ -101,7 +101,7 @@ false
 onClose: (
     reason: 'kill' | 'clean' | 'crash',
     startProcess: StartProcess,
-    options: StartupOptions, 
+    options: StartupOptions,
 ) => void
 ```
 
@@ -113,7 +113,7 @@ Called whenever the node process closes. It takes an enum-string indicating what
 
 Info about the closure is logged no matter what. It allows restarting the process, but this should generally be left to `onCompile` to avoid restart-loops.
 
-Default value: 
+Default value:
 ```typescript
 (reason) => {
     switch (reason) {
@@ -165,7 +165,7 @@ Default value:
 ```typescript
 onCompile: (
     error: WebpackWatchError,
-    stats: WebpackStats, 
+    stats: WebpackStats,
     startProcess: StartProcess,
     options: StartupOptions,
 ) => void
@@ -198,9 +198,24 @@ getEnvironment: (
 
 Enhance the environment variables of the node process. Besides anything returned here, `process.env` is included, as well as `FORCE_COLOR` for [chalk](https://www.npmjs.com/package/chalk) if color is supported. These can be overwritten by what is returned.
 
-Default value: 
+Default value:
 ```typescript
 () => ({})
+```
+
+---
+
+```typescript
+getArguments: (
+    options: StartupOptions
+) => Array<string>
+```
+
+Add additional CLI arguments to the process.
+
+Default value:
+```typescript
+() => []
 ```
 
 ---
@@ -211,7 +226,7 @@ entrypoint: string | null
 
 Scriptfile to run. If not set, `webpackConfig.output.filename` is used.
 
-Default value: 
+Default value:
 ```typescript
 null
 ```
@@ -224,7 +239,7 @@ cwd: string | null
 
 Current working directory for the node proess. If not set, `webpackConfig.output.path` is used.
 
-Default value: 
+Default value:
 ```typescript
 null
 ```
@@ -241,7 +256,7 @@ Set to 0 to send SIGKILL immediately instead of SIGINT.
 
 Set to null to disable.
 
-Default value: 
+Default value:
 ```typescript
 2000
 ```
